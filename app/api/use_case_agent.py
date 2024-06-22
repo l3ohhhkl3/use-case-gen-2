@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv())
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.tools import WikipediaQueryRun,DuckDuckGoSearchResults
 from langchain_community.utilities import WikipediaAPIWrapper,DuckDuckGoSearchAPIWrapper
 
