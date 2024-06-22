@@ -8,13 +8,13 @@ from langchain_community.utilities import WikipediaAPIWrapper,DuckDuckGoSearchAP
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-
+from langchain_community.vectorstores import FAISS
 
 from langchain.tools.retriever import create_retriever_tool
 from langchain.agents import create_tool_calling_agent
 
 
-from langchain_chroma import Chroma
+# from langchain_chroma import Chroma
 
 load_dotenv()
 google_api_key = os.getenv("GOOGLE_API_KEY")
@@ -30,8 +30,11 @@ wiki=WikipediaQueryRun(api_wrapper=wiki_api_wrapper)
 
 
 # Pdf as Retriever Tool
-croma_db = Chroma(persist_directory="data/chroma_db", embedding_function=GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
-pdf_retriever=croma_db.as_retriever()
+# croma_db = Chroma(persist_directory="data/chroma_db", embedding_function=GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+local_faiss = r".\data\faiss_index"
+faiss_db = FAISS.load_local(local_faiss, embeddings,allow_dangerous_deserialization=True)
+pdf_retriever=faiss_db.as_retriever()
 pdf_retriever_tool = create_retriever_tool(pdf_retriever,"generative_ai_use_cases_pdf_doc",
                        "you are a reference pdf document for  generative ai use cases. For any questions about generative-ai-use-cases, you must use this tool!")
 
