@@ -32,8 +32,16 @@ wiki=WikipediaQueryRun(api_wrapper=wiki_api_wrapper)
 # Pdf as Retriever Tool
 # croma_db = Chroma(persist_directory="data/chroma_db", embedding_function=GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-local_faiss = r".\data\faiss_index"
-faiss_db = FAISS.load_local(local_faiss, embeddings,allow_dangerous_deserialization=True)
+local_faiss = r"./data/faiss_index"
+
+try: 
+    faiss_db = FAISS.load_local(local_faiss, embeddings,allow_dangerous_deserialization=True)
+except: 
+    from data.data_injestion import faiss_db
+    print(Exception )
+
+
+
 pdf_retriever=faiss_db.as_retriever()
 pdf_retriever_tool = create_retriever_tool(pdf_retriever,"generative_ai_use_cases_pdf_doc",
                        "you are a reference pdf document for  generative ai use cases. For any questions about generative-ai-use-cases, you must use this tool!")
