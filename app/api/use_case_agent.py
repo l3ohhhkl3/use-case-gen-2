@@ -37,7 +37,7 @@ local_faiss = "./app/data/faiss_index"
 try: 
     faiss_db = FAISS.load_local(local_faiss, embeddings, allow_dangerous_deserialization=True)
 except Exception as e: 
-    from data.data_injestion import faiss_db
+    from app.data.data_injestion import faiss_db
     print(f"Exception occurred: {e}")
 
 
