@@ -32,13 +32,14 @@ wiki=WikipediaQueryRun(api_wrapper=wiki_api_wrapper)
 # Pdf as Retriever Tool
 # croma_db = Chroma(persist_directory="data/chroma_db", embedding_function=GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-local_faiss = r"./data/faiss_index"
+local_faiss = "./data/faiss_index"
 
 try: 
-    faiss_db = FAISS.load_local(local_faiss, embeddings,allow_dangerous_deserialization=True)
-except: 
+    faiss_db = FAISS.load_local(local_faiss, embeddings, allow_dangerous_deserialization=True)
+except Exception as e: 
     from data.data_injestion import faiss_db
-    print(Exception )
+    print(f"Exception occurred: {e}")
+
 
 
 
