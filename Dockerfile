@@ -1,13 +1,7 @@
 # syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
 ARG PYTHON_VERSION=3.12.4
-FROM python:${PYTHON_VERSION}-slim as base
+FROM python:${PYTHON_VERSION}-slim AS base
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -16,13 +10,25 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
+
+
+# DEVELOPMENT
+FROM base as development
+ENV \
+	PIP_NO_CACHE_DIR=off \
+	PIP_DISABLE_PIP_VERSION_CHECK=on \
+	PYTHONDONTWRITEBYTECODE=1 \
+	PYTHONUNBUFFERED=1 \
+	VIRTUAL_ENV=/use-case-gen-venv 
+ENV \
+	POETRY_VIRTUALENVS_CREATE=false \
+	POETRY_VIRTUALENVS_IN_PROJECT=false \
+	POETRY_NO_INTERACTION=1 
+
+
 WORKDIR /app
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
-
-
-    # Install build tools
+# Install build tools
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
@@ -32,33 +38,24 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y curl && \
     curl -sSL https://install.python-poetry.org | python3 -
 
-# Make Poetry's bin directory part of PATH
-ENV PATH="/root/.local/bin:$PATH"    
-
 
 # Copy pyproject.toml and poetry.lock to the working directory
 COPY pyproject.toml poetry.lock* ./
 
+# add venv to path 
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install python packages
+RUN python -m venv $VIRTUAL_ENV \
+	&& . $VIRTUAL_ENV/bin/activate \
+	&& poetry install --no-root --no-interaction --no-ansi
 
 
-# Install dependencies with Poetry
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=cache,target=/root/.cache/pypoetry \
-    poetry install --no-root --no-interaction --no-ansi 
-    # chown -R appuser /root/.local
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
-# Leverage a bind mount to requirements.txt to avoid having to copy them into
-# into this layer.
-# RUN --mount=type=cache,target=/root/.cache/pip \
-#     --mount=type=bind,source=requirements.txt,target=requirements.txt \
-#     python -m pip install -r requirements.txt
+# Create a non-root user and switch to it
+RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app \
+    && chown -R appuser /root/.local
 
-
-# # Create a non-root user and switch to it
-RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
 USER appuser
-
 
 # Copy the source code into the container.
 COPY . .

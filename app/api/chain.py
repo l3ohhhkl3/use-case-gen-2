@@ -48,11 +48,6 @@ from .use_case_agent import use_case_agent
 # print(response)
 # use_case_agent = use_case_agent | StrOutputParser
 
-from pydantic import BaseModel
-
-class ItemResponse(BaseModel):
-    result : str
-
 
 from fastapi import APIRouter, HTTPException, Request, Query
 
@@ -74,13 +69,35 @@ runnable_with_history = RunnableWithMessageHistory(
 
 
 
-@router.post("/invoke", response_model=ItemResponse, tags=["chain"])
+# @router.post("/invoke", response_model=ItemResponse, tags=["chain"])
 
-def invoke_chain(request: Request, input_data: str, session_id: str = Query(None)):
+# def invoke_chain(request: Request, input_data: str, session_id: str = Query(None)):
+#     try:
+#         result = runnable_with_history.invoke(
+#         {"msgs": input_data},
+#         config={"configurable": {"session_id": session_id}},
+#         )
+#         return {"result": result}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
+from pydantic import BaseModel
+
+class ItemResponse(BaseModel):
+    result : str
+
+class ItemRequest(BaseModel):
+    input_data: str
+    session_id: str
+
+
+@router.post("/invoke", response_model=ItemResponse, tags=["chain"])
+async def invoke_chain(request: Request, body: ItemRequest):
     try:
         result = runnable_with_history.invoke(
-        {"msgs": input_data},
-        config={"configurable": {"session_id": session_id}},
+            {"msgs": body.input_data},
+            config={"configurable": {"session_id": body.session_id}},
         )
         return {"result": result}
     except Exception as e:
